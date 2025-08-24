@@ -33,9 +33,20 @@ npm run dev
 npm run build
 ```
 
+## Deploying to Vercel
+
+This project is configured for easy deployment on Vercel as a static site.
+
+1. Push your code to a GitHub repository
+2. Connect your repository to Vercel
+3. Vercel will automatically detect the Vite project and configure the build settings
+4. The project will build and deploy automatically
+
+The vercel.json file is provided to configure the build process.
+
 ## Deploying to Render
 
-This project is configured for easy deployment on Render as a static site.
+This project is also configured for easy deployment on Render as a static site.
 
 1. Push your code to a GitHub/GitLab repository
 2. Create a new Static Site on Render
@@ -68,11 +79,11 @@ To setup the development environment on a new machine:
 1. Install Node.js from [nodejs.org](https://nodejs.org/)
 2. Clone this repository:
 ```bash
-git clone https://github.com/djangamane/planetary-chess-vite.git
+git clone https://github.com/djangamane/pc_desk-club.git
 ```
 3. Install dependencies:
 ```bash
-cd planetary-chess-vite
+cd pc_desk-club
 npm install
 ```
 4. Start development server:
@@ -92,6 +103,14 @@ planetary-chess-vite/
 │   │   └── quizQuestions.ts   # Quiz questions and types
 │   └── App.tsx         # Root component
 ```
+
+## Recent Fixes
+
+### Vercel Deployment Fixes
+- Restructured project to fix nested directory issues
+- Fixed TypeScript compilation errors
+- Resolved MIME type errors with JavaScript modules
+- Updated index.html to work correctly with Vite builds
 
 ## Contributing
 Feel free to submit issues and enhancement requests!
