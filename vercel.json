@@ -1,11 +1,11 @@
 {
   "framework": "vite",
-  "buildCommand": "npm run build:vercel",
-  "outputDirectory": "dist",
+  "buildCommand": "cd planetary-chess-desktop-main && npm run build:vercel",
+  "outputDirectory": "planetary-chess-desktop-main/dist",
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "planetary-chess-desktop-main/dist/index.html"
     }
   ],
   "github": {
