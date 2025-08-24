@@ -1,12 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const isDesktop = mode === 'desktop'
   
   return {
-    base: './', // Add this line to use relative paths for assets
     plugins: [react()],
     test: {
       globals: true,
