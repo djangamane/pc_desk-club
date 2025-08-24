@@ -24,7 +24,7 @@
     
     /* Type checking relaxation for Ant Design */
     "skipLibCheck": true,
-    "typeRoots": ["./node_modules/@types", "./src/types"]
+    "typeRoots": ["./planetary-chess-desktop-main/node_modules/@types", "./planetary-chess-desktop-main/src/types"]
   },
-  "include": ["src", "src/types/**/*"]
+  "include": ["planetary-chess-desktop-main/src", "planetary-chess-desktop-main/src/types/**/*"]
 }
