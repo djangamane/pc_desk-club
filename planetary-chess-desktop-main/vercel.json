@@ -1,6 +1,6 @@
 {
   "framework": "vite",
-  "buildCommand": "npm run build",
+  "buildCommand": "tsc -p tsconfig.vercel.json && vite build --config vite.vercel.config.ts",
   "outputDirectory": "dist",
   "routes": [
     {

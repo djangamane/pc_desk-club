@@ -24,7 +24,6 @@
     
     /* Type checking relaxation for Ant Design */
     "skipLibCheck": true,
-    "suppressImplicitAnyIndexErrors": true,
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": ["src", "src/types/**/*"]
