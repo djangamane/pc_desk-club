@@ -5,8 +5,6 @@ import { createLazyComponent } from './utils/lazyLoading';
 import { performanceMonitor } from './utils/performanceMonitor';
 import PerformanceDashboard, { usePerformanceDashboard } from './components/PerformanceDashboard';
 import SimpleDesktopLayout from './components/layout/SimpleDesktopLayout';
-import { useAppDispatch, useAppSelector } from './store';
-import { logout } from './store/slices/userSlice';
 
 // Lazy load page components
 const GamePage = createLazyComponent(
@@ -50,8 +48,8 @@ const UserSettings = createLazyComponent(
 function AppRouter() {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useAppDispatch();
-  const userState = useAppSelector(state => state.user);
+  // const dispatch = useAppDispatch();
+  // const userState = useAppSelector((state: any) => state.user);
   
   const [currentPage, setCurrentPage] = useState('home');
 
@@ -90,26 +88,26 @@ function AppRouter() {
   };
 
   // Handle login (placeholder)
-  const handleLogin = () => {
-    console.log('Login functionality will be implemented in the next phase');
-    // TODO: Navigate to login modal/page
-  };
+  // const handleLogin = () => {
+  //   console.log('Login functionality will be implemented in the next phase');
+  //   // TODO: Navigate to login modal/page
+  // };
 
   // Handle logout
-  const handleLogout = () => {
-    dispatch(logout());
-    console.log('Logged out successfully');
-    navigate('/');
-  };
+  // const handleLogout = () => {
+  //   dispatch(logout());
+  //   console.log('Logged out successfully');
+  //   navigate('/');
+  // };
 
   // User data for layout
-  const userData = userState.isAuthenticated && userState.currentUser ? {
-    username: userState.currentUser.username,
-    isAuthenticated: true,
-  } : {
-    username: '',
-    isAuthenticated: false,
-  };
+  // const userData = userState.isAuthenticated && userState.currentUser ? {
+  //   username: userState.currentUser.username,
+  //   isAuthenticated: true,
+  // } : {
+  //   username: '',
+  //   isAuthenticated: false,
+  // };
 
   return (
     <SimpleDesktopLayout

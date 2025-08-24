@@ -1,7 +1,7 @@
 {
   "framework": "vite",
-  "buildCommand": "cd planetary-chess-desktop-main && tsc -p ../tsconfig.vercel.json && vite build --config ../vite.vercel.config.ts",
-  "outputDirectory": "planetary-chess-desktop-main/dist",
+  "buildCommand": "npm run build:vercel",
+  "outputDirectory": "dist",
   "routes": [
     {
       "src": "/(.*)",
