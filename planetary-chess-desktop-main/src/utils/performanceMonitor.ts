@@ -26,9 +26,9 @@ class PerformanceMonitor {
   private isMonitoring = false;
 
   private readonly thresholds: PerformanceThresholds = {
-    maxRenderTime: 16, // 60fps target
-    minFrameRate: 30,
-    maxMemoryUsage: 100 // MB
+    maxRenderTime: 8, // Desktop target: 120fps capability (8.33ms per frame)
+    minFrameRate: 60, // Desktop standard minimum
+    maxMemoryUsage: 500 // Desktop can handle significantly more memory
   };
 
   startMonitoring(): void {
@@ -83,15 +83,15 @@ class PerformanceMonitor {
     const now = performance.now();
     this.frameCount++;
     
-    // Calculate FPS every second
+    // Calculate FPS every 1 second for responsive desktop monitoring
     if (now - this.lastFrameTime >= 1000) {
       const fps = (this.frameCount * 1000) / (now - this.lastFrameTime);
       this.frameCount = 0;
       this.lastFrameTime = now;
       
-      // Check for performance issues
+      // Check for performance issues with desktop thresholds
       if (fps < this.thresholds.minFrameRate) {
-        console.warn(`⚠️ Low frame rate detected: ${fps.toFixed(1)} FPS`);
+        console.warn(`⚠️ Desktop performance below target: ${fps.toFixed(1)} FPS (target: ${this.thresholds.minFrameRate}+ FPS)`);
       }
     }
 
@@ -100,10 +100,10 @@ class PerformanceMonitor {
 
   private getCurrentFrameRate(): number {
     const recentMetrics = this.metrics.slice(-10);
-    if (recentMetrics.length === 0) return 60;
+    if (recentMetrics.length === 0) return 144; // Desktop high-refresh target
     
     const avgRenderTime = recentMetrics.reduce((sum, m) => sum + m.renderTime, 0) / recentMetrics.length;
-    return Math.min(60, 1000 / avgRenderTime);
+    return Math.min(144, 1000 / avgRenderTime); // Desktop can target 144fps for high-refresh monitors
   }
 
   private getMemoryUsage(): number {
@@ -133,15 +133,15 @@ class PerformanceMonitor {
     const warnings: string[] = [];
 
     if (metrics.renderTime > this.thresholds.maxRenderTime) {
-      warnings.push(`Slow render: ${metrics.renderTime.toFixed(2)}ms (target: ${this.thresholds.maxRenderTime}ms)`);
+      warnings.push(`Slow render: ${metrics.renderTime.toFixed(2)}ms (desktop target: ≤${this.thresholds.maxRenderTime}ms for 120fps)`);
     }
 
     if (metrics.frameRate < this.thresholds.minFrameRate) {
-      warnings.push(`Low FPS: ${metrics.frameRate.toFixed(1)} (target: ${this.thresholds.minFrameRate}+)`);
+      warnings.push(`Low FPS: ${metrics.frameRate.toFixed(1)} (desktop target: ${this.thresholds.minFrameRate}+ fps)`);
     }
 
     if (metrics.memoryUsage > this.thresholds.maxMemoryUsage) {
-      warnings.push(`High memory usage: ${metrics.memoryUsage.toFixed(1)}MB (target: <${this.thresholds.maxMemoryUsage}MB)`);
+      warnings.push(`High memory usage: ${metrics.memoryUsage.toFixed(1)}MB (desktop limit: <${this.thresholds.maxMemoryUsage}MB)`);
     }
 
     return warnings;

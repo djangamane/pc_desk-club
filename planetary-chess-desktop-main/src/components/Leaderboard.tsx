@@ -48,10 +48,12 @@ function Leaderboard() {
     <div style={{
       backgroundColor: '#050c17',
       background: 'linear-gradient(135deg, #050c17 0%, #0c1b30 100%)',
-      minHeight: '100vh',
+      width: '100vw',
+      height: '100vh',
       padding: '20px',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      boxSizing: 'border-box'
     }}>
       {/* Digital circuit decorations (kept from original) */}
       <div style={{ position: 'absolute', height: '1px', width: '100%', background: 'linear-gradient(90deg, transparent 0%, rgba(0, 195, 255, 0.2) 50%, transparent 100%)', top: '15%', boxShadow: '0 0 8px rgba(0, 195, 255, 0.5)', zIndex: 1 }}></div>

@@ -15,7 +15,7 @@ interface PerformanceDashboardProps {
   compact?: boolean;
 }
 
-const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
+const PerformanceDashboard: React.FC<PerformanceDashboardProps> = React.memo(({
   isVisible = false,
   position = 'top-right',
   compact = false
@@ -34,7 +34,7 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
   const [componentStats, setComponentStats] = React.useState<any>(null);
   const [expanded, setExpanded] = React.useState(!compact);
 
-  const config = getPlatformConfig();
+  const config = React.useMemo(() => getPlatformConfig(), []);
 
   // Update stats periodically
   React.useEffect(() => {
@@ -67,18 +67,21 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
     'bottom-right': { bottom: '10px', right: '10px' }
   };
 
-  const getPerformanceColor = (value: number, threshold: number, inverse = false) => {
+  const getPerformanceColor = React.useCallback((value: number, threshold: number, inverse = false) => {
     const isGood = inverse ? value < threshold : value > threshold;
-    return isGood ? '#00ff88' : value > threshold * 1.5 ? '#ff4444' : '#ffaa00';
-  };
+    // Desktop-specific color coding with more stringent standards
+    if (isGood) return '#00ff88'; // Green for good performance
+    if (inverse ? value > threshold * 2 : value < threshold * 0.5) return '#ff4444'; // Red for poor performance
+    return '#ffaa00'; // Yellow for moderate performance
+  }, []);
 
-  const formatBytes = (bytes: number) => {
+  const formatBytes = React.useCallback((bytes: number) => {
     if (bytes === 0) return '0 B';
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
+  }, []);
 
   const dashboardStyle: React.CSSProperties = {
     position: 'fixed',
@@ -164,19 +167,19 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
               </div>
               <div style={metricStyle}>
                 <span>Render:</span>
-                <span style={{ color: getPerformanceColor(currentMetrics.renderTime, 16, true) }}>
+                <span style={{ color: getPerformanceColor(currentMetrics.renderTime, config.performance.maxRenderTime, true) }}>
                   {currentMetrics.renderTime.toFixed(1)}ms
                 </span>
               </div>
               <div style={metricStyle}>
                 <span>FPS:</span>
-                <span style={{ color: getPerformanceColor(currentMetrics.frameRate, 30) }}>
+                <span style={{ color: getPerformanceColor(currentMetrics.frameRate, config.performance.minFPS) }}>
                   {currentMetrics.frameRate.toFixed(1)}
                 </span>
               </div>
               <div style={metricStyle}>
                 <span>Memory:</span>
-                <span style={{ color: getPerformanceColor(currentMetrics.memoryUsage, 100, true) }}>
+                <span style={{ color: getPerformanceColor(currentMetrics.memoryUsage, config.performance.memoryLimit, true) }}>
                   {currentMetrics.memoryUsage.toFixed(1)}MB
                 </span>
               </div>
@@ -292,7 +295,7 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
       )}
     </div>
   );
-};
+});
 
 // Hook for toggling performance dashboard
 export const usePerformanceDashboard = () => {

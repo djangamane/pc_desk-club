@@ -79,15 +79,52 @@ try {
     console.log('  ✅ No mobile dependencies found in desktop build');
   }
 
-  // Calculate build size (Windows compatible)
-  const buildSize = execSync('powershell -Command "(Get-ChildItem -Recurse dist-desktop | Measure-Object -Property Length -Sum).Sum / 1MB"', { 
+  // Analyze bundle composition
+  console.log('📊 Analyzing bundle composition...');
+  
+  try {
+    const jsFiles = execSync('dir /s /b dist-desktop\\assets\\*.js', { 
+      cwd: projectRoot,
+      encoding: 'utf8'
+    }).trim().split('\n').filter(Boolean);
+
+    console.log(`\n📈 Bundle Analysis:`);
+    console.log(`  Total JS files: ${jsFiles.length}`);
+    
+    // Check for optimal chunk splitting
+    const hasVendorChunk = jsFiles.some(f => f.includes('vendor'));
+    const hasChessChunk = jsFiles.some(f => f.includes('chess'));
+    const hasUIChunk = jsFiles.some(f => f.includes('ui'));
+    
+    console.log(`\n🎯 Chunk Optimization:`);
+    console.log(`  Vendor chunk: ${hasVendorChunk ? '✅' : '❌'}`);
+    console.log(`  Chess chunk: ${hasChessChunk ? '✅' : '❌'}`);
+    console.log(`  UI chunk: ${hasUIChunk ? '✅' : '❌'}`);
+    
+  } catch (error) {
+    console.log('  ⚠️  Bundle analysis skipped (files may not exist yet)');
+  }
+
+  // Calculate build size and performance metrics
+  const buildSizeBytes = execSync('powershell -Command "(Get-ChildItem -Recurse dist-desktop | Measure-Object -Property Length -Sum).Sum"', { 
     cwd: projectRoot,
     encoding: 'utf8' 
-  }).trim() + ' MB';
-
+  }).trim();
+  
+  const buildSizeMB = (parseFloat(buildSizeBytes) / (1024 * 1024)).toFixed(2);
+  const isOptimalSize = parseFloat(buildSizeMB) < 10; // Target < 10MB for desktop
+  
   console.log(`\n🎉 Desktop build completed successfully!`);
-  console.log(`📦 Build size: ${buildSize}`);
+  console.log(`📦 Build size: ${buildSizeMB} MB ${isOptimalSize ? '✅' : '⚠️ (consider optimization)'}`);
   console.log(`📂 Output directory: ${desktopDistPath}`);
+  
+  // Performance recommendations
+  if (!isOptimalSize) {
+    console.log(`\n💡 Optimization suggestions:`);
+    console.log(`   - Enable dynamic imports for large components`);
+    console.log(`   - Consider removing unused dependencies`);
+    console.log(`   - Use tree-shaking for library imports`);
+  }
   console.log(`\n🚀 To preview the desktop build, run:`);
   console.log(`   cd ${projectRoot}`);
   console.log(`   npx vite preview --outDir dist-desktop`);

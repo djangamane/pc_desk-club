@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import { useResponsive } from '../contexts/ResponsiveContext';
 import { createDesktopHoverEffect, createDesktopHoverActiveEffect } from '../effects/visualEffects';
 
 /**
@@ -28,7 +27,6 @@ export const EnhancedHoverButton: React.FC<EnhancedHoverButtonProps> = ({
   className,
   'data-testid': testId,
 }) => {
-  const { layoutMode } = useResponsive();
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
 
@@ -59,9 +57,9 @@ export const EnhancedHoverButton: React.FC<EnhancedHoverButtonProps> = ({
     }
   }, [disabled, onClick]);
 
-  // Get base hover effect styles
-  const hoverEffectStyles = createDesktopHoverEffect(layoutMode, effectIntensity);
-  const activeEffectStyles = createDesktopHoverActiveEffect(layoutMode, effectIntensity);
+  // Get base hover effect styles (desktop-only)
+  const hoverEffectStyles = createDesktopHoverEffect('desktop', effectIntensity);
+  const activeEffectStyles = createDesktopHoverActiveEffect('desktop', effectIntensity);
 
   // Combine styles based on state
   const combinedStyles: React.CSSProperties = {

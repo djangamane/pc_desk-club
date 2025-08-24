@@ -1,91 +1,55 @@
 /**
- * Desktop-enhanced visual effects and animations system
- * Provides enhanced hover effects, animations, and visual feedback for desktop interactions
+ * Desktop visual effects and animations for the chess application
+ * Optimized for desktop-only deployment
  */
 
-import { LayoutMode } from '../types/responsive';
+import React from 'react';
 
-/**
- * Animation configuration interface
- */
+// Desktop-only layout mode type
+type LayoutMode = 'desktop';
+
 export interface AnimationConfig {
   duration: number;
   easing: string;
   delay?: number;
 }
 
-/**
- * Visual effect configuration interface
- */
-export interface VisualEffectConfig {
-  intensity: number;
-  color: string;
-  shadowBlur: number;
-  glowRadius: number;
-}
-
-/**
- * Desktop-specific animation configurations
- */
+// Desktop-optimized animation configurations
 export const DESKTOP_ANIMATIONS = {
-  hover: {
-    duration: 200,
-    easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-  },
-  thinking: {
-    duration: 1500,
-    easing: 'ease-in-out',
-  },
-  layoutTransition: {
-    duration: 300,
-    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-  },
-  pieceInteraction: {
-    duration: 150,
-    easing: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-  },
-  glow: {
-    duration: 2000,
-    easing: 'ease-in-out',
-  },
-} as const;
+  hover: { duration: 200, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
+  click: { duration: 150, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
+  pieceInteraction: { duration: 250, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+  thinking: { duration: 2000, easing: 'ease-in-out' },
+  layoutTransition: { duration: 400, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' },
+  glow: { duration: 3000, easing: 'ease-in-out' },
+};
 
-/**
- * Desktop visual effect configurations
- */
+// Desktop effect intensities
 export const DESKTOP_EFFECTS = {
   subtle: {
-    intensity: 0.3,
+    shadowBlur: 8,
+    glowRadius: 4,
     color: 'rgba(0, 195, 255, 0.3)',
-    shadowBlur: 10,
-    glowRadius: 5,
   },
   moderate: {
-    intensity: 0.6,
-    color: 'rgba(0, 195, 255, 0.6)',
-    shadowBlur: 15,
-    glowRadius: 10,
+    shadowBlur: 12,
+    glowRadius: 8,
+    color: 'rgba(0, 195, 255, 0.5)',
   },
   intense: {
-    intensity: 1.0,
-    color: 'rgba(0, 195, 255, 1.0)',
-    shadowBlur: 25,
-    glowRadius: 20,
+    shadowBlur: 20,
+    glowRadius: 15,
+    color: 'rgba(0, 195, 255, 0.7)',
   },
-} as const;
+};
 
 /**
- * Enhanced hover effect styles for desktop interactions
+ * Enhanced hover effect styles for desktop
  */
 export const createDesktopHoverEffect = (
-  layoutMode: LayoutMode,
+  layoutMode: LayoutMode = 'desktop',
   effectIntensity: 'subtle' | 'moderate' | 'intense' = 'moderate'
 ): React.CSSProperties => {
-  // Only apply enhanced effects on desktop
-  if (layoutMode === 'mobile' || layoutMode === 'tablet') {
-    return {};
-  }
-
   const effect = DESKTOP_EFFECTS[effectIntensity];
   const animation = DESKTOP_ANIMATIONS.hover;
 
@@ -102,14 +66,9 @@ export const createDesktopHoverEffect = (
  * Enhanced hover effect styles for active state
  */
 export const createDesktopHoverActiveEffect = (
-  layoutMode: LayoutMode,
+  layoutMode: LayoutMode = 'desktop',
   effectIntensity: 'subtle' | 'moderate' | 'intense' = 'moderate'
 ): React.CSSProperties => {
-  // Only apply enhanced effects on desktop
-  if (layoutMode === 'mobile' || layoutMode === 'tablet') {
-    return {};
-  }
-
   const effect = DESKTOP_EFFECTS[effectIntensity];
 
   return {
@@ -123,7 +82,7 @@ export const createDesktopHoverActiveEffect = (
  * Desktop-optimized AI thinking animation styles
  */
 export const createAIThinkingAnimation = (
-  layoutMode: LayoutMode,
+  layoutMode: LayoutMode = 'desktop',
   isThinking: boolean
 ): React.CSSProperties => {
   const baseStyles: React.CSSProperties = {
@@ -134,19 +93,10 @@ export const createAIThinkingAnimation = (
     return baseStyles;
   }
 
-  // Enhanced thinking animation for desktop
-  if (layoutMode === 'desktop' || layoutMode === 'large-desktop') {
-    return {
-      ...baseStyles,
-      animation: `desktopThinkingGlow ${DESKTOP_ANIMATIONS.thinking.duration}ms infinite ${DESKTOP_ANIMATIONS.thinking.easing}`,
-      boxShadow: '0 0 25px rgba(0, 195, 255, 0.8), 0 0 8px rgba(0, 195, 255, 0.9) inset',
-    };
-  }
-
-  // Standard thinking animation for mobile/tablet
   return {
     ...baseStyles,
-    animation: `glow ${DESKTOP_ANIMATIONS.thinking.duration}ms infinite ${DESKTOP_ANIMATIONS.thinking.easing}`,
+    animation: `desktopThinkingGlow ${DESKTOP_ANIMATIONS.thinking.duration}ms infinite ${DESKTOP_ANIMATIONS.thinking.easing}`,
+    boxShadow: '0 0 25px rgba(0, 195, 255, 0.8), 0 0 8px rgba(0, 195, 255, 0.9) inset',
   };
 };
 
@@ -154,8 +104,8 @@ export const createAIThinkingAnimation = (
  * Layout transition animation styles
  */
 export const createLayoutTransitionEffect = (
-  fromMode: LayoutMode,
-  toMode: LayoutMode
+  fromMode: LayoutMode = 'desktop',
+  toMode: LayoutMode = 'desktop'
 ): React.CSSProperties => {
   const animation = DESKTOP_ANIMATIONS.layoutTransition;
 
@@ -169,17 +119,12 @@ export const createLayoutTransitionEffect = (
  * Chess piece interaction visual feedback
  */
 export const createChessPieceInteractionEffect = (
-  layoutMode: LayoutMode,
+  layoutMode: LayoutMode = 'desktop',
   interactionState: 'idle' | 'hover' | 'dragging' | 'dropping'
 ): React.CSSProperties => {
   const baseStyles: React.CSSProperties = {
     transition: `all ${DESKTOP_ANIMATIONS.pieceInteraction.duration}ms ${DESKTOP_ANIMATIONS.pieceInteraction.easing}`,
   };
-
-  // Enhanced effects only on desktop
-  if (layoutMode === 'mobile' || layoutMode === 'tablet') {
-    return baseStyles;
-  }
 
   switch (interactionState) {
     case 'hover':
@@ -215,7 +160,7 @@ export const createChessPieceInteractionEffect = (
 export const createComponentScalingEffect = (
   currentSize: number,
   targetSize: number,
-  layoutMode: LayoutMode
+  layoutMode: LayoutMode = 'desktop'
 ): React.CSSProperties => {
   const scaleFactor = targetSize / currentSize;
   const animation = DESKTOP_ANIMATIONS.layoutTransition;
@@ -231,14 +176,10 @@ export const createComponentScalingEffect = (
  * Enhanced glow effect for desktop components
  */
 export const createDesktopGlowEffect = (
-  layoutMode: LayoutMode,
+  layoutMode: LayoutMode = 'desktop',
   intensity: 'low' | 'medium' | 'high' = 'medium',
   color: string = 'rgba(0, 195, 255, 0.6)'
 ): React.CSSProperties => {
-  if (layoutMode === 'mobile' || layoutMode === 'tablet') {
-    return {};
-  }
-
   const intensityMap = {
     low: { blur: 10, spread: 2 },
     medium: { blur: 15, spread: 4 },
@@ -280,102 +221,22 @@ export const animationUtils = {
   createOptimizedAnimation: (
     animationName: string,
     duration: number,
-    easing: string = 'ease'
-  ): React.CSSProperties => {
-    const actualDuration = animationUtils.getAnimationDuration(duration);
-    
-    return {
-      animation: actualDuration > 0 ? `${animationName} ${actualDuration}ms ${easing}` : 'none',
-      willChange: 'transform, opacity',
-      backfaceVisibility: 'hidden',
-      perspective: '1000px',
-    };
-  },
+    easing: string = 'ease-in-out'
+  ): React.CSSProperties => ({
+    animation: `${animationName} ${animationUtils.getAnimationDuration(duration)}ms ${easing}`,
+    willChange: 'transform, opacity',
+  }),
 };
 
-/**
- * CSS keyframes for desktop animations
- */
-export const DESKTOP_KEYFRAMES = `
-  @keyframes desktopThinkingGlow {
-    0% { 
-      box-shadow: 0 0 15px rgba(0, 195, 255, 0.5), 0 0 5px rgba(0, 195, 255, 0.8) inset;
-      transform: scale(1);
-    }
-    50% { 
-      box-shadow: 0 0 30px rgba(0, 195, 255, 0.9), 0 0 12px rgba(0, 195, 255, 1) inset;
-      transform: scale(1.02);
-    }
-    100% { 
-      box-shadow: 0 0 15px rgba(0, 195, 255, 0.5), 0 0 5px rgba(0, 195, 255, 0.8) inset;
-      transform: scale(1);
-    }
-  }
-
-  @keyframes desktopGlow {
-    0% { 
-      box-shadow: 0 0 10px 2px rgba(0, 195, 255, 0.4);
-    }
-    50% { 
-      box-shadow: 0 0 20px 4px rgba(0, 195, 255, 0.8);
-    }
-    100% { 
-      box-shadow: 0 0 10px 2px rgba(0, 195, 255, 0.4);
-    }
-  }
-
-  @keyframes chessPieceDrop {
-    0% { 
-      transform: scale(1.1) translateY(-4px);
-    }
-    50% { 
-      transform: scale(1.05) translateY(2px);
-    }
-    100% { 
-      transform: scale(1) translateY(0);
-    }
-  }
-
-  @keyframes desktopHoverPulse {
-    0% { 
-      transform: scale(1);
-      box-shadow: 0 0 10px rgba(0, 195, 255, 0.3);
-    }
-    50% { 
-      transform: scale(1.02);
-      box-shadow: 0 0 20px rgba(0, 195, 255, 0.6);
-    }
-    100% { 
-      transform: scale(1);
-      box-shadow: 0 0 10px rgba(0, 195, 255, 0.3);
-    }
-  }
-
-  @keyframes layoutTransitionFade {
-    0% { 
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    100% { 
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes thinkingPulse {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(300%); }
-  }
-
-  @keyframes blink {
-    0% { opacity: 0.3; }
-    50% { opacity: 1; }
-    100% { opacity: 0.3; }
-  }
-
-  @keyframes glow {
-    0% { box-shadow: 0 0 15px rgba(0, 195, 255, 0.5), 0 0 5px rgba(0, 195, 255, 0.8) inset; }
-    50% { box-shadow: 0 0 25px rgba(0, 195, 255, 0.8), 0 0 8px rgba(0, 195, 255, 0.9) inset; }
-    100% { box-shadow: 0 0 15px rgba(0, 195, 255, 0.5), 0 0 5px rgba(0, 195, 255, 0.8) inset; }
-  }
-`;
+export default {
+  DESKTOP_ANIMATIONS,
+  DESKTOP_EFFECTS,
+  createDesktopHoverEffect,
+  createDesktopHoverActiveEffect,
+  createAIThinkingAnimation,
+  createLayoutTransitionEffect,
+  createChessPieceInteractionEffect,
+  createComponentScalingEffect,
+  createDesktopGlowEffect,
+  animationUtils,
+};

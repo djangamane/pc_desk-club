@@ -1,37 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { Chess, type Chess as ChessType } from 'chess.js';
-// Chessboard import removed as we use ResponsiveChessboardContainer
+import { Chessboard } from 'react-chessboard';
 import { quizQuestions, type QuizQuestion } from '../data/quizQuestions';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { calculateScore } from '../utils/scoring';
 import { shuffle } from 'lodash';
-import { LayoutManager } from './LayoutManager';
-import { ResponsiveLayoutWrapper } from './DesktopLayout';
-import { ResponsiveChessboardContainer } from './ResponsiveChessboardContainer';
-import { DesktopSidebar } from './DesktopSidebar';
-import { useResponsive } from '../contexts/ResponsiveContext';
-import { GlobalAnimationStyles } from './GlobalAnimationStyles';
-import { LayoutTransition, useLayoutTransition } from './LayoutTransition';
-import { EnhancedHoverButton } from './EnhancedHoverButton';
-import { KeyboardHandler } from './KeyboardHandler';
-import { ResponsiveStyleProvider } from './ResponsiveStyleProvider';
-import { ResponsiveQuiz } from './ResponsiveQuiz';
-import { 
-  ResponsiveButton, 
-  ResponsivePanel, 
-  ResponsiveText, 
-  ResponsiveAvatar, 
-  ResponsiveContainer,
-  ResponsiveFlex 
-} from './ResponsiveStyledComponents';
-import { 
-  FUTURISTIC_THEME,
-  createResponsiveTextStyles,
-  createResponsiveAvatarStyles,
-  getResponsiveFontSize,
-  getResponsiveSpacing 
-} from '../styles/responsiveStyles';
 
 type GameState = {
   currentQuestion: QuizQuestion;
@@ -40,22 +14,11 @@ type GameState = {
   isQuizVisible: boolean;
   lastMoveCorrect: boolean | null;
   currentTaunt: string;
-  isGameOver: boolean; // Added to track game over state explicitly
+  isGameOver: boolean;
+  playerCanMove: boolean;
 };
 
-type ResponsiveGameState = GameState & {
-  layout: {
-    mode: 'mobile' | 'tablet' | 'desktop' | 'large-desktop';
-    chessboardSize: number;
-    sidebarWidth: number;
-    containerHeight: number;
-  };
-};
-
-// Internal Game component that uses responsive context
-function GameInternal() {
-  const { layoutMode, chessboardSize, calculateDynamicSize, isLayoutMode } = useResponsive();
-  const { previousLayoutMode, isTransitioning, handleTransitionComplete } = useLayoutTransition(layoutMode);
+function Game() {
   const navigate = useNavigate();
   const [game] = useState<ChessType>(new Chess());
   const [isThinking, setIsThinking] = useState(false);
@@ -63,40 +26,24 @@ function GameInternal() {
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   const [questionsResetCount, setQuestionsResetCount] = useState(0);
   const [incorrectAnswersCount, setIncorrectAnswersCount] = useState(0);
-  // Initialize responsive game state with shuffled questions
-  const [gameState, setGameState] = useState<ResponsiveGameState>(() => {
+  
+  // Initialize game state with shuffled questions
+  const [gameState, setGameState] = useState<GameState>(() => {
     const shuffledQuestions = shuffle([...quizQuestions]);
     return {
       currentQuestion: shuffledQuestions[0],
       remainingQuestions: shuffledQuestions.slice(1),
       usedQuestions: [],
-      isQuizVisible: true,
+      isQuizVisible: true, // Start with quiz visible
       lastMoveCorrect: null,
-      currentTaunt: "Before I make my first move, let's see how much you know...",
+      currentTaunt: "Welcome to Planetary Chess! Answer the quiz question to determine Stewie's first move. Correct answers make him weaker in the battle against systemic racism!",
       isGameOver: false,
-      layout: {
-        mode: layoutMode,
-        chessboardSize: chessboardSize,
-        sidebarWidth: calculateDynamicSize(350),
-        containerHeight: calculateDynamicSize(600),
-      },
+      playerCanMove: false, // Player cannot move until they answer a question and AI moves
     };
   });
 
-  // Update layout state when responsive context changes
-  useEffect(() => {
-    setGameState(prev => ({
-      ...prev,
-      layout: {
-        mode: layoutMode,
-        chessboardSize: chessboardSize,
-        sidebarWidth: calculateDynamicSize(350),
-        containerHeight: calculateDynamicSize(600),
-      },
-    }));
-  }, [layoutMode, chessboardSize, calculateDynamicSize]);
-
   const stockfishRef = useRef<Worker | null>(null);
+  const stockfishTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get next question and handle reshuffling when all questions are used
   const getNextQuestion = (): [QuizQuestion, QuizQuestion[], QuizQuestion[]] => {
@@ -121,15 +68,14 @@ function GameInternal() {
     return [nextQuestion, nextRemaining, nextUsed];
   };
 
-
   // --- Centralized Game Status Check ---
   const checkGameStatusAndUpdateState = async () => {
     console.log(`DEBUG: Checking game status. isGameOver: ${game.isGameOver()}, isCheckmate: ${game.isCheckmate()}, turn: ${game.turn()}`);
 
     if (game.isCheckmate()) {
       // Corrected logic based on logs: turn() indicates the player who CANNOT move.
-      const playerWon = game.turn() === 'w'; // White (Player) cannot move => Player Won
-      const aiWon = game.turn() === 'b';    // Black (AI) cannot move => AI Won
+      const playerWon = game.turn() === 'w'; // White (Systemic Racism) cannot move => Player Won
+      const aiWon = game.turn() === 'b';    // Black (Player) cannot move => AI Won
 
       if (playerWon) {
         // --- PLAYER WIN CONDITION ---
@@ -140,7 +86,7 @@ function GameInternal() {
         // Update log to include reset count
         console.log(`Calculated Score: ${score}, Correct: ${correctAnswersCount}, Incorrect: ${incorrectAnswersCount}, Moves: ${Math.ceil(moves / 2)}, Resets: ${questionsResetCount}`);
 
-        setGameState(prev => ({ ...prev, isGameOver: true, isQuizVisible: false })); // Mark game over immediately
+        setGameState(prev => ({ ...prev, isGameOver: true, isQuizVisible: false, playerCanMove: false })); // Mark game over immediately
 
         // Handle leaderboard logic (async)
         try {
@@ -171,18 +117,18 @@ function GameInternal() {
               if (insertError) throw insertError;
 
               console.log("Score saved successfully.");
-              setGameState(prev => ({ ...prev, currentTaunt: `Checkmate! Score: ${score}. Saved to leaderboard as ${playerName.trim()}!` }));
+              setGameState(prev => ({ ...prev, currentTaunt: `Checkmate! You've successfully resisted systemic oppression! Score: ${score}. Saved to leaderboard as ${playerName.trim()}!` }));
             } else {
               console.log("Player cancelled or entered empty name.");
-              setGameState(prev => ({ ...prev, currentTaunt: `Checkmate! Score: ${score}. You qualified but didn't enter a name.` }));
+              setGameState(prev => ({ ...prev, currentTaunt: `Checkmate! You've successfully resisted systemic oppression! Score: ${score}. You qualified but didn't enter a name.` }));
             }
           } else {
-            setGameState(prev => ({ ...prev, currentTaunt: `Checkmate! Your score: ${score}. Not quite enough for the leaderboard this time.` }));
+            setGameState(prev => ({ ...prev, currentTaunt: `Checkmate! You've successfully resisted systemic oppression! Your score: ${score}. Not quite enough for the leaderboard this time.` }));
           }
         } catch (err) {
           console.error("Error handling win condition:", err);
           const errorMessage = err instanceof Error ? err.message : String(err);
-          setGameState(prev => ({ ...prev, currentTaunt: `Checkmate! Score: ${score}. An error occurred processing the leaderboard: ${errorMessage}` }));
+          setGameState(prev => ({ ...prev, currentTaunt: `Checkmate! You've successfully resisted systemic oppression! Score: ${score}. An error occurred processing the leaderboard: ${errorMessage}` }));
         }
         return true; // Game ended
 
@@ -193,7 +139,8 @@ function GameInternal() {
           ...prev,
           isGameOver: true,
           isQuizVisible: false,
-          currentTaunt: "Hah! Checkmated by a baby. How delightfully pathetic! Your intellectual genealogy is as shallow as a colonial water basin."
+          playerCanMove: false,
+          currentTaunt: "Hah! Checkmated by Stewie, the embodiment of systemic racism! How delightfully pathetic! Your intellectual genealogy is as shallow as a colonial water basin. But remember, the struggle continues!"
         }));
         return true; // Game ended
       }
@@ -203,7 +150,8 @@ function GameInternal() {
         ...prev,
         isGameOver: true,
         isQuizVisible: false,
-        currentTaunt: "A draw? How dreadfully bourgeois. Like watching American Idol without the satisfaction of seeing dreams crushed."
+        playerCanMove: false,
+        currentTaunt: "A draw? How dreadfully bourgeois. Like watching American Idol without the satisfaction of seeing dreams crushed. The fight against systemic racism continues..."
       }));
       return true; // Game ended
     } else if (game.isStalemate()) {
@@ -212,7 +160,8 @@ function GameInternal() {
         ...prev,
         isGameOver: true,
         isQuizVisible: false,
-        currentTaunt: "Stalemate? How pedestrian. Like a Walmart shopper trying to haggle."
+        playerCanMove: false,
+        currentTaunt: "Stalemate? How pedestrian. Like a Walmart shopper trying to haggle. But the struggle against systemic oppression continues!"
       }));
       return true; // Game ended
     } else if (game.isInsufficientMaterial()) {
@@ -221,7 +170,8 @@ function GameInternal() {
         ...prev,
         isGameOver: true,
         isQuizVisible: false,
-        currentTaunt: "Insufficient material? A pathetic end. Like bringing a spork to a laser gun fight."
+        playerCanMove: false,
+        currentTaunt: "Insufficient material? A pathetic end. Like bringing a spork to a laser gun fight. But remember, knowledge is your most powerful weapon!"
       }));
       return true; // Game ended
     } else if (game.isThreefoldRepetition()) {
@@ -230,7 +180,8 @@ function GameInternal() {
         ...prev,
         isGameOver: true,
         isQuizVisible: false,
-        currentTaunt: "Threefold repetition? Are you stuck in a temporal loop, you simpleton?"
+        playerCanMove: false,
+        currentTaunt: "Threefold repetition? Are you stuck in a temporal loop, you simpleton? Break the cycle of oppression with knowledge!"
       }));
       return true; // Game ended
     }
@@ -241,65 +192,176 @@ function GameInternal() {
   };
   // --- End Centralized Game Status Check ---
 
-
+  // Improved Stockfish initialization with error handling
   useEffect(() => {
-    // Skip Stockfish initialization in test environment
-    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && !window.location.href.includes('test')) {
-      try {
-        stockfishRef.current = new Worker('/stockfish.js');
-        stockfishRef.current.addEventListener('message', handleStockfishMessage);
-        stockfishRef.current.postMessage('uci');
-        stockfishRef.current.postMessage('ucinewgame');
-      } catch (error) {
-        console.warn('Stockfish worker initialization failed:', error);
-        // Fallback: use a mock worker for testing
-        stockfishRef.current = null;
+    // Initialize Stockfish
+    try {
+      console.log('Initializing Stockfish...');
+      
+      // Clear any existing timeout
+      if (stockfishTimeoutRef.current) {
+        clearTimeout(stockfishTimeoutRef.current);
       }
+      
+      // Create a timeout for Stockfish initialization
+      stockfishTimeoutRef.current = setTimeout(() => {
+        console.error('Stockfish initialization timeout');
+        setGameState(prev => ({
+          ...prev,
+          currentTaunt: "Error: AI initialization timed out. Please reload the page to try again."
+        }));
+        setIsThinking(false);
+      }, 10000); // 10 second timeout
+      
+      // Initialize Stockfish worker with proper path for Vite
+      stockfishRef.current = new Worker('/stockfish.js');
+      stockfishRef.current.addEventListener('message', handleStockfishMessage);
+      stockfishRef.current.postMessage('uci');
+      stockfishRef.current.postMessage('ucinewgame');
+      
+      // Listen for initialization confirmation
+      const initHandler = (e: MessageEvent) => {
+        const message = e.data;
+        if (message === 'uciok') {
+          console.log('Stockfish initialized successfully');
+          // Clear the timeout since initialization succeeded
+          if (stockfishTimeoutRef.current) {
+            clearTimeout(stockfishTimeoutRef.current);
+            stockfishTimeoutRef.current = null;
+          }
+          
+          // Remove this listener
+          stockfishRef.current?.removeEventListener('message', initHandler);
+          
+          // Don't make first move immediately - wait for quiz answer
+          console.log('Stockfish ready - waiting for first quiz answer');
+        }
+      };
+      
+      stockfishRef.current.addEventListener('message', initHandler);
+      
+    } catch (error) {
+      console.error('Stockfish worker initialization failed:', error);
+      // Clear timeout on error
+      if (stockfishTimeoutRef.current) {
+        clearTimeout(stockfishTimeoutRef.current);
+        stockfishTimeoutRef.current = null;
+      }
+      // Show error to user
+      setGameState(prev => ({
+        ...prev,
+        currentTaunt: "Error initializing AI. Please reload the page to try again."
+      }));
     }
 
-    return () => stockfishRef.current?.terminate();
+    return () => {
+      // Cleanup function
+      if (stockfishTimeoutRef.current) {
+        clearTimeout(stockfishTimeoutRef.current);
+      }
+      if (stockfishRef.current) {
+        console.log('Terminating Stockfish worker');
+        stockfishRef.current.terminate();
+      }
+    };
   }, []);
-
 
   const handleStockfishMessage = async (e: MessageEvent) => {
     const message = e.data;
     if (message.startsWith('bestmove')) {
-      const move = message.split(' ')[1];
-      console.log(`DEBUG: Stockfish suggests move: ${move}`);
-      if (move && move !== '(none)') { // Ensure move is valid
-         game.move(move);
-      } else {
-         console.warn("Stockfish returned invalid move:", move);
+      // Clear any move timeout
+      if (stockfishTimeoutRef.current) {
+        clearTimeout(stockfishTimeoutRef.current);
+        stockfishTimeoutRef.current = null;
       }
+      
+      const move = message.split(' ')[1];
+      console.log(`Stockfish selected move: ${move}`);
       setIsThinking(false);
+      
+      if (!move || move === '(none)') {
+        console.warn('Stockfish returned invalid move:', move);
+        return;
+      }
+      
+      try {
+        // Make the actual move
+        game.move(move);
+        
+        // Check game status AFTER AI move
+        const gameEnded = await checkGameStatusAndUpdateState();
 
-      // Check game status AFTER AI move
-      const gameEnded = await checkGameStatusAndUpdateState();
-
-      if (!gameEnded) {
-        // If game didn't end, it's player's turn, don't show quiz
+        if (!gameEnded) {
+          // If game didn't end, it's player's turn
+          console.log('Game continues, player\'s turn');
+          setGameState(prev => ({
+            ...prev,
+            isQuizVisible: false, // Hide quiz after AI move
+            playerCanMove: true, // Player can now move
+            currentTaunt: gameState.lastMoveCorrect 
+              ? "You answered correctly! Stewie made a weak move. Now it's your turn to move."
+              : "Your knowledge was lacking! Stewie made a powerful move. Now it's your turn to move."
+          }));
+        }
+      } catch (error) {
+        console.error('Error processing Stockfish move:', error);
         setGameState(prev => ({
           ...prev,
-          isQuizVisible: false, // Hide quiz after AI moves
-          currentTaunt: prev.currentTaunt // Keep the taunt from the quiz answer
+          currentTaunt: "There was an error processing Stewie's move. Please try again."
         }));
       }
     }
   };
 
   const makeAIMove = (difficulty: 'easy' | 'hard') => {
-    if (gameState.isGameOver) return; // Don't move if game is already over
+    if (gameState.isGameOver) {
+      console.log('Game is over, not making AI move');
+      return;
+    }
 
     setIsThinking(true);
-    // Lower the 'easy' depth range to 1-3
+    // Lower the 'easy' depth range to 1-3 for normal moves
+    // Higher depth range for grandmaster moves when player answers incorrectly
     const depth = difficulty === 'easy'
-      ? Math.floor(Math.random() * 3) + 1
-      : Math.floor(Math.random() * 3) + 16; // Keep 'hard' depth as 16-18
+      ? Math.floor(Math.random() * 3) + 1  // Depth 1-3 for normal moves
+      : Math.floor(Math.random() * 3) + 10; // Depth 10-12 for grandmaster moves (reduced for performance)
 
-    // Simplified: Always use Stockfish for now, remove random move logic
-    console.log(`DEBUG: Requesting Stockfish move with depth ${depth}`);
-    stockfishRef.current?.postMessage(`position fen ${game.fen()}`);
-    stockfishRef.current?.postMessage(`go depth ${depth}`);
+    console.log(`Making AI move with ${difficulty} difficulty (depth ${depth})`);
+    
+    if (!stockfishRef.current) {
+      console.error('Stockfish worker not available');
+      setIsThinking(false);
+      return;
+    }
+    
+    // Set a timeout for the move calculation
+    if (stockfishTimeoutRef.current) {
+      clearTimeout(stockfishTimeoutRef.current);
+    }
+    
+    stockfishTimeoutRef.current = setTimeout(() => {
+      console.error('Stockfish move timeout');
+      setIsThinking(false);
+      setGameState(prev => ({
+        ...prev,
+        currentTaunt: "Stewie is taking too long to think. Trying again..."
+      }));
+      // Retry the move
+      makeAIMove(difficulty);
+    }, 15000); // 15 second timeout for move calculation
+    
+    try {
+      stockfishRef.current.postMessage(`position fen ${game.fen()}`);
+      stockfishRef.current.postMessage(`go depth ${depth}`);
+    } catch (error) {
+      console.error('Error sending command to Stockfish:', error);
+      // Clear timeout on error
+      if (stockfishTimeoutRef.current) {
+        clearTimeout(stockfishTimeoutRef.current);
+        stockfishTimeoutRef.current = null;
+      }
+      setIsThinking(false);
+    }
   };
 
   const handleQuizAnswer = (selectedAnswer: string) => {
@@ -316,69 +378,50 @@ function GameInternal() {
 
     const [nextQuestion, nextRemaining, nextUsed] = getNextQuestion();
 
-    // Set taunt based on answer, prepare for AI move
+    // Update the game state based on answer
     setGameState(prev => ({
       ...prev,
       currentQuestion: nextQuestion,
       remainingQuestions: nextRemaining,
       usedQuestions: nextUsed,
-      isQuizVisible: false, // Hide quiz immediately
+      isQuizVisible: false, // Hide quiz after answering
       lastMoveCorrect: isCorrect,
+      playerCanMove: false, // Player cannot move until AI makes its move
       currentTaunt: isCorrect
-        ? gameState.currentQuestion.tauntCorrect
-        : gameState.currentQuestion.tauntIncorrect
+        ? `Correct! ${gameState.currentQuestion.tauntCorrect} Stewie's grip on systemic oppression weakens! He will make a weaker move.`
+        : `Incorrect. ${gameState.currentQuestion.tauntIncorrect} Stewie grows stronger with your ignorance and will make a powerful move!`
     }));
 
-    // Trigger AI move after setting state
-    makeAIMove(isCorrect ? 'easy' : 'hard');
-  };
-
-  /**
-   * Handle keyboard-based quiz answer selection
-   * @param answerIndex - Index of the selected answer (0-3)
-   */
-  const handleKeyboardQuizAnswer = (answerIndex: number) => {
-    if (gameState.isGameOver || !gameState.isQuizVisible) return;
-    
-    const options = gameState.currentQuestion.options;
-    if (answerIndex >= 0 && answerIndex < options.length) {
-      handleQuizAnswer(options[answerIndex]);
-    }
-  };
-
-  /**
-   * Handle keyboard navigation actions
-   * @param action - Navigation action to perform
-   */
-  const handleKeyboardNavigation = (action: 'back' | 'home') => {
-    switch (action) {
-      case 'back':
-      case 'home':
-        navigate('/');
-        break;
-    }
-  };
-
-  /**
-   * Handle keyboard game control actions
-   * @param action - Game control action to perform
-   */
-  const handleKeyboardGameControl = (action: 'pause' | 'reset') => {
-    switch (action) {
-      case 'reset':
-        // Reset game state (could be implemented in future)
-        console.log('Game reset requested via keyboard');
-        break;
-      case 'pause':
-        // Pause game (could be implemented in future)
-        console.log('Game pause requested via keyboard');
-        break;
+    // Set thinking state and make AI move with appropriate difficulty
+    setIsThinking(true);
+    if (isCorrect) {
+      makeAIMove('easy'); // Easier move for correct answer
+    } else {
+      makeAIMove('hard'); // Harder move for incorrect answer
     }
   };
 
   // Must be synchronous for react-chessboard
   const onDrop = (sourceSquare: string, targetSquare: string): boolean => {
-    if (gameState.isGameOver) return false; // Don't allow moves if game over
+    // Player can only move if it's their turn AND they've been granted permission after AI moved
+    if (gameState.isGameOver || !gameState.playerCanMove || game.turn() !== 'b') {
+      if (gameState.isGameOver) {
+        console.log("DEBUG: Game is over, move not allowed.");
+      } else if (!gameState.playerCanMove) {
+        console.log("DEBUG: Player cannot move until AI has moved.");
+        setGameState(prev => ({
+          ...prev,
+          currentTaunt: "Wait for Stewie to make his move based on your quiz answer first!"
+        }));
+      } else if (game.turn() !== 'b') {
+        console.log("DEBUG: Not player's turn.");
+        setGameState(prev => ({
+          ...prev,
+          currentTaunt: "It's not your turn yet!"
+        }));
+      }
+      return false;
+    }
 
     let moveSuccessful = false;
     try {
@@ -395,14 +438,23 @@ function GameInternal() {
          console.log(`DEBUG: Player moved ${sourceSquare}-${targetSquare}`);
          moveSuccessful = true;
 
-         // Call the async check function but don't await it
+         // After player moves, check game status
          checkGameStatusAndUpdateState().then(gameEnded => {
             if (!gameEnded) {
-              // If game didn't end, show quiz for AI's turn
-              console.log("DEBUG: Game continues, showing quiz.");
+              // If game didn't end, show the quiz for next AI move
+              console.log("DEBUG: Player move successful, showing quiz for next AI move.");
+              
+              // Get next quiz question ready
+              const [nextQuestion, nextRemaining, nextUsed] = getNextQuestion();
+              
               setGameState(prev => ({
                 ...prev,
-                isQuizVisible: true // Show quiz before AI moves
+                currentQuestion: nextQuestion,
+                remainingQuestions: nextRemaining,
+                usedQuestions: nextUsed,
+                playerCanMove: false, // Player cannot move until next AI move
+                isQuizVisible: true, // Show quiz for next AI move
+                currentTaunt: "Your move made! Now answer this knowledge question to determine Stewie's next move."
               }));
             }
          }).catch(err => {
@@ -423,338 +475,201 @@ function GameInternal() {
   const questionNumber = gameState.usedQuestions.length + 1;
   const totalQuestions = quizQuestions.length;
 
-  // Custom light and dark square colors for the chess board
-  const customDarkSquareStyle = {
-    backgroundColor: '#193f6e',
-    boxShadow: 'inset 0 0 3px rgba(0, 195, 255, 0.3)'
-  };
-  const customLightSquareStyle = {
-    backgroundColor: '#236ab0',
-    boxShadow: 'inset 0 0 3px rgba(255, 255, 255, 0.2)'
-  };
-
-  // Responsive chessboard component
-  const ResponsiveChessboard = () => (
-    <ResponsiveChessboardContainer
-      game={game}
-      onPieceDrop={onDrop}
-      boardOrientation="black"
-      customDarkSquareStyle={customDarkSquareStyle}
-      customLightSquareStyle={customLightSquareStyle}
-    />
-  );
-
-  // Desktop sidebar content
-  const DesktopSidebarContent = () => (
-    <DesktopSidebar
-      currentQuestion={gameState.currentQuestion}
-      isThinking={isThinking}
-      currentTaunt={gameState.currentTaunt}
-      isQuizVisible={gameState.isQuizVisible}
-      isGameOver={gameState.isGameOver}
-      questionNumber={questionNumber}
-      totalQuestions={totalQuestions}
-      onQuizAnswer={handleQuizAnswer}
-      onNavigate={navigate}
-    />
-  );
-
-  // Mobile layout component (preserves original mobile design)
-  const MobileLayout = () => {
-    const avatarSize = 80;
-    const avatarStyles = createResponsiveAvatarStyles(layoutMode, avatarSize, true);
-    
-    // Create a Stewie avatar using responsive styling
-    const stewieAvatar = (
-      <ResponsiveAvatar
-        size={avatarSize}
-        withGlow={true}
-        style={{
-          margin: '0 auto 5px',
-          animation: isThinking ? 'responsiveGlow 1.5s infinite ease-in-out' : 'none',
-        }}
-        data-testid="mobile-stewie-avatar"
-      >
-        <img
-          src="/assets/stewie.png"
-          alt="AI Stewie"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            filter: 'drop-shadow(0 0 8px rgba(0, 195, 255, 0.7))'
-          }}
-        />
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'radial-gradient(circle at center, transparent 0%, rgba(5, 12, 23, 0.3) 90%)',
-          borderRadius: '50%',
-          zIndex: 2
-        }}></div>
-        {isThinking && (
-          <div style={{
-            position: 'absolute',
-            bottom: '5px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '40px',
-            height: '4px',
-            background: 'rgba(0, 0, 0, 0.3)',
-            borderRadius: '2px',
-            overflow: 'hidden',
-            zIndex: 3
-          }}>
-            <div style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              height: '100%',
-              width: '30%',
-              background: FUTURISTIC_THEME.gradients.button,
-              borderRadius: '2px',
-              animation: 'responsiveThinkingBar 1.2s infinite',
-            }}></div>
+  return (
+    <div className="game-container" style={{ 
+      display: 'flex', 
+      flexDirection: 'column',
+      height: '100vh',
+      padding: '0',
+      margin: '0',
+      background: 'linear-gradient(135deg, #061224 0%, #0a1c34 100%)',
+      color: '#e8f4ff',
+      fontFamily: 'sans-serif',
+      overflow: 'hidden'
+    }}>
+      {/* Simplified styles to improve performance */}
+      <style>{`
+        @keyframes blink {
+          0%, 50% { opacity: 1; }
+          51%, 100% { opacity: 0; }
+        }
+        
+        /* Responsive layout styles */
+        .game-layout {
+          display: grid;
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto 1fr auto;
+          height: 100vh;
+          width: 100%;
+          overflow: hidden;
+        }
+        
+        @media (min-width: 992px) {
+          .game-layout {
+            grid-template-columns: 50% 50%;
+            grid-template-rows: auto 1fr;
+          }
+          
+          .message-area {
+            grid-column: 1 / 3;
+            grid-row: 1;
+          }
+          
+          .chessboard-area {
+            grid-column: 1;
+            grid-row: 2;
+            justify-self: center;
+            align-self: center;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+          }
+          
+          .quiz-area {
+            grid-column: 2;
+            grid-row: 2;
+            align-self: center;
+          }
+        }
+      `}</style>
+      
+      <div className="game-layout">
+        {/* Stewie and Message */}
+        <div className="message-area" style={{display: 'flex', alignItems: 'center', padding: '10px', background: 'rgba(0,0,0,0.3)', maxHeight: '80px', overflow: 'hidden'}}>
+          <img
+            src="/stewie.png"
+            alt="Stewie"
+            style={{
+              width: '40px',
+              height: '40px',
+              marginRight: '10px',
+              borderRadius: '50%',
+              border: '2px solid #193366'
+            }}
+          />
+          <div style={{flex: 1}}>
+            {isThinking ? 
+              <p style={{fontSize: '14px', fontWeight: 'bold', margin: '0'}}>Stewie is thinking...</p> : 
+              <p style={{fontSize: '14px', margin: '0'}}>{gameState.currentTaunt}</p>
+            }
           </div>
-        )}
-      </ResponsiveAvatar>
-    );
-
-    return (
-      <ResponsiveContainer
-        style={{
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          overflow: 'hidden',
-          padding: `${getResponsiveSpacing('sm', layoutMode)}px`,
-          position: 'relative'
-        }}
-        data-testid="mobile-layout-container"
-      >
-        {/* Digital circuit decoration */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, transparent 0%, rgba(0, 195, 255, 0.1) 50%, transparent 100%)', boxShadow: FUTURISTIC_THEME.effects.glow.subtle, zIndex: 1 }}></div>
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, transparent 0%, rgba(0, 195, 255, 0.1) 50%, transparent 100%)', boxShadow: FUTURISTIC_THEME.effects.glow.subtle, zIndex: 1 }}></div>
-        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '1px', background: 'linear-gradient(180deg, transparent 0%, rgba(0, 195, 255, 0.1) 50%, transparent 100%)', boxShadow: FUTURISTIC_THEME.effects.glow.subtle, zIndex: 1 }}></div>
-        <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '1px', background: 'linear-gradient(180deg, transparent 0%, rgba(0, 195, 255, 0.1) 50%, transparent 100%)', boxShadow: FUTURISTIC_THEME.effects.glow.subtle, zIndex: 1 }}></div>
-
-        {/* Header Section with Stewie Avatar */}
-        <ResponsiveFlex
-          direction={{ mobile: 'column', tablet: 'column', desktop: 'column', 'large-desktop': 'column' }}
-          align="center"
-          justify="center"
-          gap="sm"
-          style={{
-            width: '100%',
-            textAlign: 'center',
-            position: 'relative',
-            zIndex: 5,
-          }}
-        >
-          <ResponsiveText
-            variant="heading"
-            size="2xl"
-            as="h1"
-            style={{
-              margin: '0 0 5px 0',
-              textShadow: FUTURISTIC_THEME.effects.glow.subtle,
-            }}
-          >
-            PLANETARY CHESS
-          </ResponsiveText>
-
-          {stewieAvatar}
-
-          <ResponsivePanel
-            variant="overlay"
-            withGlow={true}
-            style={{
-              width: '85%',
-              maxWidth: '500px',
-              position: 'relative',
-              padding: `${getResponsiveSpacing('sm', layoutMode)}px ${getResponsiveSpacing('base', layoutMode)}px`,
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute',
-                top: '-10px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: '0',
-                height: '0',
-                borderLeft: '10px solid transparent',
-                borderRight: '10px solid transparent',
-                borderBottom: `10px solid ${FUTURISTIC_THEME.colors.background.overlay}`,
+        </div>
+        
+        {/* Chess Board */}
+        <div className="chessboard-area" style={{padding: '5px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 'calc(100vh - 180px)'}}>
+          <div style={{textAlign: 'center', marginBottom: '5px', color: 'lightblue', fontSize: '14px', fontWeight: 'bold'}}>
+            You are playing as Black - Resisting Systemic Racism
+          </div>
+          <div style={{width: '85%', maxWidth: '400px', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '0 0 20px 0'}}>
+            <Chessboard
+              id="PlanetaryChessBoard"
+              position={game.fen()}
+              onPieceDrop={onDrop}
+              boardOrientation="black"
+              arePiecesDraggable={gameState.playerCanMove && !gameState.isGameOver}
+              customBoardStyle={{
+                borderRadius: '8px',
+                boxShadow: '0 0 20px rgba(0, 195, 255, 0.3)',
+                border: '3px solid #193366'
               }}
-            ></div>
-
-            <ResponsiveText
-              variant="body"
-              size="sm"
-              as="p"
+            />
+          </div>
+        </div>
+        
+        {/* Quiz Section */}
+        <div className="quiz-area" style={{padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
+          {gameState.isQuizVisible ? (
+            <div style={{width: '90%', maxWidth: '550px', background: 'rgba(0,0,0,0.5)', padding: '20px', borderRadius: '8px', boxShadow: '0 0 15px rgba(0, 195, 255, 0.2)', border: '1px solid #193366'}}>
+              <h3 style={{color: 'lightblue', textAlign: 'center', fontSize: '18px', marginBottom: '15px'}}>{gameState.currentQuestion.question}</h3>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '15px'}}>
+                {gameState.currentQuestion.options.map((option, index) => (
+                  <button 
+                    key={index} 
+                    onClick={() => handleQuizAnswer(option)}
+                    style={{
+                      padding: '12px 15px',
+                      background: '#193366',
+                      color: 'white',
+                      border: '1px solid rgba(0, 195, 255, 0.3)',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: '16px',
+                      transition: 'all 0.2s ease',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = '#254680'}
+                    onMouseOut={(e) => e.currentTarget.style.background = '#193366'}
+                  >
+                    {String.fromCharCode(65 + index)}. {option}
+                  </button>
+                ))}
+              </div>
+              <p style={{color: 'lightblue', fontSize: '14px', marginTop: '15px', textAlign: 'center'}}>
+                Answer correctly to move your pieces!<br/>
+                Incorrect answers strengthen Stewie's move.
+              </p>
+            </div>
+          ) : (
+            !gameState.isGameOver && (
+              <div style={{width: '90%', maxWidth: '550px', background: 'rgba(0,0,0,0.5)', padding: '20px', borderRadius: '8px', boxShadow: '0 0 15px rgba(0, 195, 255, 0.2)', border: '1px solid #193366'}}>
+                <h3 style={{color: 'lightblue', textAlign: 'center', fontSize: '18px'}}>Game Status</h3>
+                <p style={{color: 'white', textAlign: 'center', fontSize: '16px', margin: '20px 0'}}>
+                  {gameState.playerCanMove ? 
+                    "It's your turn. Make your move to fight against systemic racism!" : 
+                    "Waiting for quiz question..."}
+                </p>
+                <div style={{height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                  <img 
+                    src="/stewie.png" 
+                    alt="Stewie waiting" 
+                    style={{opacity: 0.5, width: '100px', height: '100px'}} 
+                  />
+                </div>
+              </div>
+            )
+          )}
+          
+          {/* Game Controls */}
+          <div style={{display: 'flex', justifyContent: 'center', marginTop: '20px', width: '90%', maxWidth: '550px'}}>
+            <button
+              onClick={() => navigate('/')}
               style={{
-                margin: 0,
-                fontStyle: 'italic'
+                padding: '12px 25px',
+                background: '#193366',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                marginRight: '20px',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.2)'
               }}
             >
-              {isThinking ? (
-                <span>
-                  Processing neural pathways
-                  <span style={{display: 'inline-block', animation: 'responsiveBlink 1.2s infinite'}}>...</span>
-                </span>
-              ) : (
-                gameState.currentTaunt
-              )}
-            </ResponsiveText>
-          </ResponsivePanel>
-
-          <ResponsiveText
-            variant="caption"
-            size="xs"
-            style={{
-              marginBottom: '5px'
-            }}
-          >
-            <span style={{color: FUTURISTIC_THEME.colors.text.secondary}}>QUANTUM INQUIRY</span>{' '}
-            <span style={{color: FUTURISTIC_THEME.colors.secondary}}>{questionNumber}</span>{' '}
-            <span style={{color: FUTURISTIC_THEME.colors.text.secondary}}>OF</span>{' '}
-            <span style={{color: FUTURISTIC_THEME.colors.secondary}}>{totalQuestions}</span>
-          </ResponsiveText>
-
-          <ResponsiveButton
-            onClick={() => navigate('/')}
-            variant="secondary"
-            size="sm"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px'
-            }}
-            data-testid="mobile-return-button"
-          >
-            ← Return to Base
-          </ResponsiveButton>
-        </ResponsiveFlex>
-
-        {/* Chessboard Section */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexGrow: 1,
-            position: 'relative',
-            zIndex: 2,
-            width: '100%',
-            maxWidth: '500px',
-            margin: '0 auto'
-          }}
-        >
-          <ResponsiveChessboard />
+              Back to Home
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                padding: '12px 25px',
+                background: '#193366',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.2)'
+              }}
+            >
+              New Game
+            </button>
+          </div>
         </div>
-
-        {/* Quiz Section */}
-        <div style={{
-          width: '90%',
-          maxWidth: '400px',
-          margin: `${getResponsiveSpacing('base', layoutMode)}px auto`,
-          position: 'relative',
-          zIndex: 3
-        }}>
-          <ResponsiveQuiz
-            currentQuestion={gameState.currentQuestion}
-            isVisible={gameState.isQuizVisible}
-            isGameOver={gameState.isGameOver}
-            questionNumber={questionNumber}
-            totalQuestions={totalQuestions}
-            onQuizAnswer={handleQuizAnswer}
-            keyboardEnabled={false} // Disable keyboard on mobile to avoid conflicts
-            layoutMode={layoutMode}
-            data-testid="mobile-quiz"
-          />
-        </div>
-
-        {/* Game status indicator */}
-        <div style={{
-          width: '80%',
-          maxWidth: '400px',
-          margin: `${getResponsiveSpacing('sm', layoutMode)}px auto`,
-          height: '4px',
-          background: 'rgba(0, 0, 0, 0.3)',
-          borderRadius: '2px',
-          overflow: 'hidden',
-          position: 'relative',
-          marginBottom: `${getResponsiveSpacing('base', layoutMode)}px`,
-          zIndex: 2
-        }}>
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            height: '100%',
-            width: isThinking ? '100%' : '30%',
-            background: FUTURISTIC_THEME.gradients.button,
-            borderRadius: '2px',
-            animation: isThinking ? 'responsivePulse 1.5s infinite' : 'none',
-            transition: 'width 0.3s ease'
-          }}></div>
-        </div>
-      </ResponsiveContainer>
-    );
-  };
-
-  // Conditional rendering based on layout mode with transitions
-  return (
-    <ResponsiveStyleProvider includeAnimations={true}>
-      <GlobalAnimationStyles />
-      <KeyboardHandler
-        onQuizAnswer={handleKeyboardQuizAnswer}
-        onNavigate={handleKeyboardNavigation}
-        onGameControl={handleKeyboardGameControl}
-        isQuizActive={gameState.isQuizVisible}
-        isGameOver={gameState.isGameOver}
-        enabled={true}
-        data-testid="game-keyboard-handler"
-      />
-      <LayoutTransition
-        currentLayoutMode={layoutMode}
-        previousLayoutMode={previousLayoutMode}
-        onTransitionComplete={handleTransitionComplete}
-        data-testid="game-layout-transition"
-      >
-        <div 
-          data-testid="game-container"
-          className={isLayoutMode('mobile') || isLayoutMode('tablet') ? 'mobile-layout' : 'desktop-layout'}
-        >
-          {isLayoutMode('mobile') || isLayoutMode('tablet') ? (
-            <MobileLayout />
-          ) : (
-            <div style={{
-              background: FUTURISTIC_THEME.gradients.background,
-              minHeight: '100vh',
-              position: 'relative'
-            }}>
-              <ResponsiveLayoutWrapper
-                leftPanelContent={<ResponsiveChessboard />}
-                rightPanelContent={<DesktopSidebarContent />}
-              />
-            </div>
-          )}
-        </div>
-      </LayoutTransition>
-    </ResponsiveStyleProvider>
-  );
-}
-
-// Main Game component with responsive layout provider
-function Game() {
-  return (
-    <LayoutManager>
-      <GameInternal />
-    </LayoutManager>
+      </div>
+    </div>
   );
 }
 

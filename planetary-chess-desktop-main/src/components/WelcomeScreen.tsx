@@ -1,269 +1,153 @@
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 
-function WelcomeScreen() {
-  const navigate = useNavigate();
-
+const WelcomeScreen: React.FC = () => {
   return (
     <div style={{
-      backgroundColor: '#050c17',
-      background: 'linear-gradient(135deg, #050c17 0%, #0c1b30 100%)',
-      minHeight: '100vh',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px',
+      height: '100vh',
       width: '100%',
+      padding: '20px',
+      background: 'url("/pchess1.png") no-repeat center center',
+      backgroundSize: 'cover',
+      color: '#ffffff',
+      textAlign: 'center',
       position: 'relative',
-      overflow: 'hidden'
     }}>
-      {/* Futuristic background elements */}
+      {/* Overlay to make text more readable over background */}
       <div style={{
         position: 'absolute',
         top: 0,
         left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'radial-gradient(circle at 50% 50%, rgba(25, 118, 210, 0.05) 0%, transparent 70%)',
-        zIndex: 1
-      }}></div>
-      
-      {/* Digital circuit lines */}
-      <div style={{
-        position: 'absolute',
-        height: '1px',
         width: '100%',
-        background: 'linear-gradient(90deg, transparent 0%, rgba(0, 195, 255, 0.2) 50%, transparent 100%)',
-        top: '30%',
-        boxShadow: '0 0 8px rgba(0, 195, 255, 0.5)',
-        zIndex: 1
-      }}></div>
-      <div style={{
-        position: 'absolute',
-        height: '1px',
-        width: '100%',
-        background: 'linear-gradient(90deg, transparent 0%, rgba(0, 195, 255, 0.1) 50%, transparent 100%)',
-        top: '70%',
-        boxShadow: '0 0 5px rgba(0, 195, 255, 0.3)',
-        zIndex: 1
-      }}></div>
-      <div style={{
-        position: 'absolute',
-        width: '1px',
         height: '100%',
-        background: 'linear-gradient(180deg, transparent 0%, rgba(0, 195, 255, 0.1) 50%, transparent 100%)',
-        left: '25%',
-        boxShadow: '0 0 5px rgba(0, 195, 255, 0.3)',
-        zIndex: 1
-      }}></div>
-      <div style={{
-        position: 'absolute',
-        width: '1px',
-        height: '100%',
-        background: 'linear-gradient(180deg, transparent 0%, rgba(0, 195, 255, 0.1) 50%, transparent 100%)',
-        right: '25%',
-        boxShadow: '0 0 5px rgba(0, 195, 255, 0.3)',
-        zIndex: 1
-      }}></div>
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        zIndex: 1,
+      }} />
 
+      {/* Main Welcome Content */}
       <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
-        maxWidth: '650px',
+        maxWidth: '800px',
+        margin: '0 auto',
         position: 'relative',
         zIndex: 2,
-        backdropFilter: 'blur(5px)',
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
-        padding: '30px',
-        borderRadius: '15px',
-        boxShadow: '0 0 30px rgba(0, 195, 255, 0.2), 0 0 10px rgba(0, 0, 0, 0.5) inset',
-        border: '1px solid rgba(0, 195, 255, 0.2)'
       }}>
+        {/* Research Paper Information */}
         <div style={{
-          position: 'relative',
-          width: '100%',
-          marginBottom: '30px'
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '8px',
+          padding: '25px',
+          marginBottom: '30px',
+          color: '#ffffff',
+          fontSize: '16px',
+          lineHeight: '1.6',
         }}>
-          <img 
-            src="/stewie-chess-bg.png"
-            alt="Stewie Chess"
-            style={{
-              width: '100%',
-              height: 'auto',
-              display: 'block',
-              borderRadius: '10px',
-              boxShadow: '0 0 25px rgba(0, 195, 255, 0.5)'
-            }}
-          />
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            borderRadius: '10px',
-            boxShadow: '0 0 15px rgba(0, 195, 255, 0.7) inset',
-            pointerEvents: 'none'
-          }}></div>
-        </div>
-
-        <h1 style={{ 
-          fontSize: '52px', 
-          fontWeight: '900', 
-          background: 'linear-gradient(180deg, #ffffff 0%, #7cbdff 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          margin: '0 0 10px 0',
-          textAlign: 'center',
-          textShadow: '0 0 15px rgba(0, 195, 255, 0.7)',
-          fontFamily: '"Orbitron", sans-serif',
-          letterSpacing: '2px'
-        }}>
-          PLANETARY CHESS
-        </h1>
-        
-        <div style={{ 
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '10px',
-          marginBottom: '20px'
-        }}>
-          <div style={{
-            width: '50px',
-            height: '50px',
-            borderRadius: '50%',
-            overflow: 'hidden',
-            border: '2px solid rgba(0, 195, 255, 0.6)',
-            boxShadow: '0 0 15px rgba(0, 195, 255, 0.4)',
-            background: 'radial-gradient(circle at center, #0c1b30 0%, #050c17 90%)'
-          }}>
-            <img 
-              src="/assets/stewie.png" 
-              alt="AI Stewie"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }}
-            />
-          </div>
-          <p style={{ 
-            color: '#aadcff', 
-            marginBottom: '0', 
-            textAlign: 'center',
-            maxWidth: '500px',
-            fontSize: '14px',
-            letterSpacing: '1px',
-            lineHeight: '1.6',
-            textShadow: '0 0 10px rgba(0, 195, 255, 0.5)'
-          }}>
-            Face AI Cyber Stewie in a battle of wits and knowledge. Answer correctly to weaken your opponent or face the full power of systemic oppression.
+          <h2 style={{ fontSize: '24px', marginBottom: '15px', color: '#1890ff' }}>
+            GAME THEORY IN ACTION: EXPLORING<br />PLANETARY CHESS AS A TOOL<br />FOR SOCIAL CHANGE
+          </h2>
+          
+          <p style={{ margin: '20px 0', color: '#d0d0d0' }}>
+            International Journal of Game Theory and Technology (IJGTT)<br />
+            Vol.10, No.2, June 2024<br />
+            DOI: 10.5121/ijgtt.2024.10201
+          </p>
+          
+          <p style={{ marginBottom: '20px' }}>
+            Our published research validates how chess mechanics can be used as a metaphor to combat systemic racism.
+            Click the logo below to read the full paper.
+          </p>
+          
+          <p style={{ fontWeight: 'bold', color: '#1890ff' }}>
+            Join the revolution. Knowledge is power. Checkmate systemic racism!
           </p>
         </div>
-
+        
+        {/* Logo */}
         <div style={{
-          width: '100%',
-          maxWidth: '320px',
+          display: 'flex',
+          justifyContent: 'center',
+          marginBottom: '30px',
+        }}>
+          <a 
+            href="https://aircconline.com/ijgtt/V10N2/10224ijgtt01.pdf" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            title="View published research paper"
+          >
+            <img 
+              src="/avatar.png" 
+              alt="Planetary Chess Logo" 
+              style={{
+                width: '150px',
+                height: '150px',
+                borderRadius: '50%',
+                border: '3px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 0 20px rgba(0, 195, 255, 0.5)',
+                transition: 'all 0.3s ease',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 0 30px rgba(0, 195, 255, 0.8)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 195, 255, 0.5)';
+              }}
+            />
+          </a>
+        </div>
+
+        {/* Action Button */}
+        <div style={{
+          marginTop: '20px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px'
+          alignItems: 'center',
         }}>
+          <p style={{ 
+            color: '#ffffff', 
+            fontSize: '14px',
+            marginBottom: '15px',
+            textAlign: 'center'
+          }}>
+            Revolutionary Chess Experience • Based on Peer-Reviewed Research
+          </p>
+          
           <button
-            onClick={() => navigate('/game')}
             style={{
-              width: '100%',
-              padding: '14px',
-              background: 'linear-gradient(135deg, #056df5 0%, #00a2ff 100%)',
-              color: 'white',
+              background: 'linear-gradient(135deg, #1890ff 0%, #40a9ff 100%)',
+              border: 'none',
               borderRadius: '8px',
+              padding: '16px 40px',
+              color: '#ffffff',
               fontSize: '18px',
-              fontWeight: 'bold',
+              fontWeight: '600',
               cursor: 'pointer',
-              border: '1px solid rgba(0, 195, 255, 0.5)',
-              boxShadow: '0 0 15px rgba(0, 195, 255, 0.5), 0 0 5px rgba(0, 195, 255, 0.5) inset',
-              textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
               transition: 'all 0.2s ease',
-              position: 'relative',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: '"Orbitron", sans-serif',
-              letterSpacing: '1px'
+              boxShadow: '0 4px 12px rgba(24, 144, 255, 0.3)',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 195, 255, 0.8), 0 0 10px rgba(0, 195, 255, 0.5) inset';
               e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(24, 144, 255, 0.4)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 15px rgba(0, 195, 255, 0.5), 0 0 5px rgba(0, 195, 255, 0.5) inset';
               e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(24, 144, 255, 0.3)';
+            }}
+            onClick={() => {
+              window.location.href = '/game';
             }}
           >
-            INITIALIZE GAME
-            <div style={{
-              position: 'absolute',
-              top: '-50%',
-              left: '-50%',
-              right: '-50%',
-              bottom: '-50%',
-              background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)',
-              transform: 'rotate(25deg)',
-              transition: 'all 0.5s',
-            }}></div>
-          </button>
-
-          <button
-            onClick={() => navigate('/leaderboard')}
-            style={{
-              width: '100%',
-              padding: '14px',
-              background: 'linear-gradient(135deg, #7e12c7 0%, #b24cff 100%)',
-              color: 'white',
-              borderRadius: '8px',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              border: '1px solid rgba(178, 76, 255, 0.5)',
-              boxShadow: '0 0 15px rgba(178, 76, 255, 0.5), 0 0 5px rgba(178, 76, 255, 0.3) inset',
-              textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-              transition: 'all 0.2s ease',
-              position: 'relative',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: '"Orbitron", sans-serif',
-              letterSpacing: '1px'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 20px rgba(178, 76, 255, 0.8), 0 0 10px rgba(178, 76, 255, 0.5) inset';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 15px rgba(178, 76, 255, 0.5), 0 0 5px rgba(178, 76, 255, 0.3) inset';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            VIEW STATISTICS
-            <div style={{
-              position: 'absolute',
-              top: '-50%',
-              left: '-50%',
-              right: '-50%',
-              bottom: '-50%',
-              background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)',
-              transform: 'rotate(25deg)',
-              transition: 'all 0.5s',
-            }}></div>
+            Join the Revolution
           </button>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default WelcomeScreen;

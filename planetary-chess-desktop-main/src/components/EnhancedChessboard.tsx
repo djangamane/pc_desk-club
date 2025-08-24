@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
-import { useResponsive } from '../contexts/ResponsiveContext';
 import { createChessPieceInteractionEffect, animationUtils } from '../effects/visualEffects';
 
 /**
@@ -34,13 +33,13 @@ export const EnhancedChessboard: React.FC<EnhancedChessboardProps> = ({
   disabled = false,
   'data-testid': testId,
 }) => {
-  const { layoutMode } = useResponsive();
   const [hoveredSquare, setHoveredSquare] = useState<string | null>(null);
   const [draggedPiece, setDraggedPiece] = useState<string | null>(null);
   const [interactionState, setInteractionState] = useState<'idle' | 'hover' | 'dragging' | 'dropping'>('idle');
   const boardRef = useRef<HTMLDivElement>(null);
 
-  const isDesktop = layoutMode === 'desktop' || layoutMode === 'large-desktop';
+  // Always true for desktop-only version
+  const isDesktop = true;
 
   // Enhanced square styles with desktop effects
   const getEnhancedSquareStyles = useCallback((square: string, isLight: boolean) => {
@@ -115,8 +114,8 @@ export const EnhancedChessboard: React.FC<EnhancedChessboardProps> = ({
     return success;
   }, [disabled, onPieceDrop, isDesktop]);
 
-  // Get piece interaction styles
-  const pieceInteractionStyles = createChessPieceInteractionEffect(layoutMode, interactionState);
+  // Get piece interaction styles (desktop-only)
+  const pieceInteractionStyles = createChessPieceInteractionEffect('desktop', interactionState);
 
   // Enhanced board container styles
   const boardContainerStyles: React.CSSProperties = {

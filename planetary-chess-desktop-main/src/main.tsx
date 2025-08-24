@@ -1,53 +1,61 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { Provider } from 'react-redux'
 import App from './App.tsx'
+import { store } from './store/index'
 import './index.css'
-import { initializeCapacitor } from './utils/capacitorWrapper'
-import { getPlatformConfig } from './utils/platformUtils'
+import 'antd/dist/reset.css'
+import './types/antd-react-fix.d.ts' // Import our type fixes
 
-// Initialize platform-specific features
-const initializePlatform = async () => {
-  const config = getPlatformConfig();
-  
-  console.log('🚀 Initializing Planetary Chess...', {
-    platform: config.isDesktop ? 'Desktop' : 'Mobile',
-    inputMethod: config.preferredInputMethod,
-    keyboardSupport: config.supportsKeyboard,
-    touchSupport: config.supportsTouch
-  });
+// Check if running in Electron
+const isElectron = typeof window !== 'undefined' && window.electronAPI;
 
-  // Initialize Capacitor only in mobile mode
-  await initializeCapacitor();
+// Desktop-only initialization
+const initializeDesktop = () => {
+  console.log('🚀 Initializing Planetary Chess (Desktop Only)...');
   
-  // Desktop-specific initialization
-  if (config.isDesktop) {
-    console.log('🖥️  Desktop mode: Enhanced features enabled');
+  if (isElectron) {
+    console.log('🖥️  Electron mode: Enhanced desktop features enabled');
     
-    // Add desktop-specific event listeners
-    document.addEventListener('keydown', (e) => {
-      // Global keyboard shortcuts can be handled here
-      if (e.ctrlKey && e.key === 'r') {
-        e.preventDefault();
-        window.location.reload();
+    // Listen for menu actions from Electron
+    window.electronAPI?.onMenuAction((action: string) => {
+      console.log('Menu action received:', action);
+      // Handle menu actions here
+      switch (action) {
+        case 'new-game':
+          window.location.hash = '#/game';
+          break;
+        case 'home':
+          window.location.hash = '#/';
+          break;
+        case 'leaderboard':
+          window.location.hash = '#/leaderboard';
+          break;
+        case 'restart-game':
+          window.location.reload();
+          break;
       }
     });
+  } else {
+    console.log('🌐 Web mode: Basic desktop features enabled');
   }
+  
+  // Add desktop-specific event listeners
+  document.addEventListener('keydown', (e) => {
+    // Global keyboard shortcuts can be handled here
+    if (e.ctrlKey && e.key === 'r') {
+      e.preventDefault();
+      window.location.reload();
+    }
+  });
 };
 
-// Initialize platform and render app
-initializePlatform().then(() => {
-  ReactDOM.createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
+// Initialize desktop and render app
+initializeDesktop();
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <Provider store={store}>
       <App />
-    </React.StrictMode>,
-  );
-}).catch((error) => {
-  console.error('Failed to initialize platform:', error);
-  
-  // Fallback: render app anyway
-  ReactDOM.createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>,
-  );
-});
+    </Provider>
+  </React.StrictMode>,
+);

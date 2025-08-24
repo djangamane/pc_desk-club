@@ -1,5 +1,4 @@
 import React, { useEffect, useCallback, useRef } from 'react';
-import { useResponsive } from '../contexts/ResponsiveContext';
 
 /**
  * Keyboard shortcut configuration
@@ -79,7 +78,6 @@ export const KeyboardHandler: React.FC<KeyboardHandlerProps> = ({
   stopPropagation = true,
   'data-testid': testId,
 }) => {
-  const { isLayoutMode } = useResponsive();
   const activeKeysRef = useRef<Set<string>>(new Set());
   const lastKeyTimeRef = useRef<number>(0);
   
@@ -100,11 +98,6 @@ export const KeyboardHandler: React.FC<KeyboardHandlerProps> = ({
    * Handle keyboard events with debouncing and conflict prevention
    */
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    // Only handle keyboard events on desktop layouts
-    if (!isLayoutMode('desktop') && !isLayoutMode('large-desktop')) {
-      return;
-    }
-
     // Don't handle if disabled
     if (!enabled) {
       return;
@@ -170,7 +163,6 @@ export const KeyboardHandler: React.FC<KeyboardHandlerProps> = ({
       }
     }
   }, [
-    isLayoutMode,
     enabled,
     isQuizActive,
     isGameOver,
@@ -193,11 +185,6 @@ export const KeyboardHandler: React.FC<KeyboardHandlerProps> = ({
    * Set up keyboard event listeners with proper cleanup
    */
   useEffect(() => {
-    // Only add listeners on desktop layouts
-    if (!isLayoutMode('desktop') && !isLayoutMode('large-desktop')) {
-      return;
-    }
-
     if (!enabled) {
       return;
     }
@@ -213,7 +200,7 @@ export const KeyboardHandler: React.FC<KeyboardHandlerProps> = ({
       // Clear active keys on cleanup
       activeKeysRef.current.clear();
     };
-  }, [handleKeyDown, handleKeyUp, isLayoutMode, enabled]);
+  }, [handleKeyDown, handleKeyUp, enabled]);
 
   /**
    * Clear active keys when component becomes disabled or quiz state changes
@@ -232,33 +219,6 @@ export const KeyboardHandler: React.FC<KeyboardHandlerProps> = ({
       aria-hidden="true"
     />
   );
-};
-
-/**
- * Hook for using keyboard shortcuts in functional components
- * Provides a simpler interface for common keyboard interactions
- */
-export const useKeyboardShortcuts = (
-  handlers: {
-    onQuizAnswer?: (answerIndex: number) => void;
-    onNavigate?: (action: 'back' | 'home') => void;
-    onGameControl?: (action: 'pause' | 'reset') => void;
-  },
-  options: {
-    isQuizActive?: boolean;
-    isGameOver?: boolean;
-    enabled?: boolean;
-  } = {}
-) => {
-  const { isLayoutMode } = useResponsive();
-  
-  // Only enable on desktop layouts
-  const isDesktop = isLayoutMode('desktop') || isLayoutMode('large-desktop');
-  
-  return {
-    isDesktop,
-    keyboardEnabled: isDesktop && (options.enabled !== false),
-  };
 };
 
 export default KeyboardHandler;

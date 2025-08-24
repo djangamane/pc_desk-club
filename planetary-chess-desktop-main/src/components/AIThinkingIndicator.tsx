@@ -1,5 +1,4 @@
 import React from 'react';
-import { useResponsive } from '../contexts/ResponsiveContext';
 import { createAIThinkingAnimation, animationUtils } from '../effects/visualEffects';
 
 /**
@@ -26,13 +25,12 @@ export const AIThinkingIndicator: React.FC<AIThinkingIndicatorProps> = ({
   children,
   'data-testid': testId,
 }) => {
-  const { layoutMode, calculateDynamicSize } = useResponsive();
+  // Desktop-only sizing - no responsive calculation needed
+  const finalSize = size * 1.5; // Desktop scaling factor
+  const thinkingStyles = createAIThinkingAnimation('desktop', isThinking);
   
-  const finalSize = calculateDynamicSize(size);
-  const thinkingStyles = createAIThinkingAnimation(layoutMode, isThinking);
-  
-  // Enhanced thinking animation for desktop
-  const isDesktop = layoutMode === 'desktop' || layoutMode === 'large-desktop';
+  // Desktop-only - always enhanced animations
+  const isDesktop = true;
   
   const containerStyles: React.CSSProperties = {
     position: 'relative',
@@ -47,10 +45,10 @@ export const AIThinkingIndicator: React.FC<AIThinkingIndicatorProps> = ({
 
   const progressBarStyles: React.CSSProperties = {
     position: 'absolute',
-    bottom: isDesktop ? '8px' : '5px',
+    bottom: '8px',
     left: '50%',
     transform: 'translateX(-50%)',
-    width: isDesktop ? '60px' : '40px',
+    width: '60px',
     height: '4px',
     background: 'rgba(0, 0, 0, 0.3)',
     borderRadius: '2px',

@@ -1,18 +1,6 @@
 import React from 'react';
 import { QuizQuestion } from '../data/quizQuestions';
-import { useResponsive } from '../contexts/ResponsiveContext';
 import { AIThinkingIndicator } from './AIThinkingIndicator';
-import { ResponsiveQuiz } from './ResponsiveQuiz';
-import { 
-  ResponsiveButton, 
-  ResponsivePanel, 
-  ResponsiveText,
-  ResponsiveFlex 
-} from './ResponsiveStyledComponents';
-import { 
-  FUTURISTIC_THEME,
-  getResponsiveSpacing 
-} from '../styles/responsiveStyles';
 
 /**
  * Props for DesktopSidebar component
@@ -36,8 +24,6 @@ export interface DesktopSidebarProps {
   onQuizAnswer: (answer: string) => void;
   /** Callback for navigation */
   onNavigate: (path: string) => void;
-  /** Optional layout mode override for testing */
-  layoutMode?: 'mobile' | 'tablet' | 'desktop' | 'large-desktop';
 }
 
 /**
@@ -54,22 +40,12 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   totalQuestions,
   onQuizAnswer,
   onNavigate,
-  layoutMode: layoutModeProp,
 }) => {
-  const responsive = useResponsive();
-  const { calculateDynamicSize } = responsive;
-  const layoutMode = layoutModeProp || responsive.layoutMode;
-
-  // Don't render sidebar on mobile/tablet
-  if (layoutMode === 'mobile' || layoutMode === 'tablet') {
-    return null;
-  }
-
-  const sidebarWidth = calculateDynamicSize(350);
-  const avatarSize = calculateDynamicSize(100);
+  const avatarSize = 100;
 
   /**
    * Stewie avatar component with enhanced thinking animation
+   * Represents the embodiment of systemic racism
    */
   const StewieAvatar = () => (
     <AIThinkingIndicator
@@ -81,7 +57,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
     >
       <img
         src="/assets/stewie.png"
-        alt="AI Stewie"
+        alt="Stewie - The Embodiment of Systemic Racism"
         style={{
           width: '100%',
           height: '100%',
@@ -96,12 +72,16 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
    * AI taunt/message display component
    */
   const TauntDisplay = () => (
-    <ResponsivePanel
-      variant="overlay"
-      withGlow={true}
+    <div
       style={{
-        marginBottom: `${getResponsiveSpacing('lg', layoutMode)}px`,
+        marginBottom: '24px',
         position: 'relative',
+        background: 'rgba(0, 20, 40, 0.7)',
+        backdropFilter: 'blur(5px)',
+        borderRadius: '12px',
+        padding: '16px',
+        boxShadow: '0 0 20px rgba(0, 195, 255, 0.3)',
+        border: '1px solid rgba(0, 195, 255, 0.2)',
       }}
     >
       <div
@@ -113,46 +93,107 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
           height: '0',
           borderLeft: '10px solid transparent',
           borderRight: '10px solid transparent',
-          borderBottom: `10px solid ${FUTURISTIC_THEME.colors.background.overlay}`,
+          borderBottom: '10px solid rgba(0, 20, 40, 0.7)',
         }}
       />
-      <ResponsiveText
-        variant="body"
-        size="sm"
-        as="p"
+      <p
         style={{
           margin: 0,
           fontStyle: 'italic',
+          color: '#e8f4ff',
+          fontSize: '14px',
+          lineHeight: '1.4',
         }}
       >
         {isThinking ? (
           <span>
-            Processing neural pathways
-            <span style={{ display: 'inline-block', animation: 'responsiveBlink 1.2s infinite' }}>...</span>
+            Stewie (Systemic Racism) is calculating...
+            <span style={{ display: 'inline-block', animation: 'blink 1.2s infinite' }}>...</span>
           </span>
         ) : (
           currentTaunt
         )}
-      </ResponsiveText>
-    </ResponsivePanel>
+      </p>
+    </div>
   );
 
   /**
-   * Enhanced quiz display using ResponsiveQuiz component
+   * Quiz display component
    */
   const QuizDisplay = () => {
+    if (!isQuizVisible || isGameOver) {
+      return null;
+    }
+
     return (
-      <ResponsiveQuiz
-        currentQuestion={currentQuestion}
-        isVisible={isQuizVisible}
-        isGameOver={isGameOver}
-        questionNumber={questionNumber}
-        totalQuestions={totalQuestions}
-        onQuizAnswer={onQuizAnswer}
-        keyboardEnabled={true}
-        layoutMode={layoutMode}
+      <div
+        style={{
+          background: 'rgba(0, 20, 40, 0.7)',
+          backdropFilter: 'blur(5px)',
+          borderRadius: '12px',
+          padding: '20px',
+          boxShadow: '0 0 20px rgba(0, 195, 255, 0.3)',
+          border: '1px solid rgba(0, 195, 255, 0.2)',
+          marginBottom: '24px',
+        }}
         data-testid="desktop-sidebar-quiz"
-      />
+      >
+        <h3
+          style={{
+            color: '#7cb3e8',
+            fontSize: '16px',
+            fontFamily: '"Orbitron", sans-serif',
+            marginBottom: '16px',
+            textAlign: 'center',
+          }}
+        >
+          {currentQuestion.question}
+        </h3>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {currentQuestion.options.map((option, index) => (
+            <button
+              key={index}
+              onClick={() => onQuizAnswer(option)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: 'linear-gradient(135deg, #193366 0%, #2b4f8a 100%)',
+                color: '#e8f4ff',
+                borderRadius: '8px',
+                fontSize: '14px',
+                cursor: 'pointer',
+                border: '1px solid rgba(0, 195, 255, 0.3)',
+                boxShadow: '0 0 10px rgba(0, 195, 255, 0.2)',
+                transition: 'all 0.2s ease',
+                fontFamily: '"Orbitron", sans-serif',
+                textAlign: 'left',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 15px rgba(0, 195, 255, 0.4)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 10px rgba(0, 195, 255, 0.2)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              {String.fromCharCode(65 + index)}. {option}
+            </button>
+          ))}
+        </div>
+        
+        <p style={{
+          marginTop: '16px',
+          fontSize: '12px',
+          color: '#7cb3e8',
+          fontStyle: 'italic',
+          textAlign: 'center'
+        }}>
+          Correct answers weaken Stewie's grip on systemic oppression!
+          Incorrect answers strengthen his power with grandmaster moves.
+        </p>
+      </div>
     );
   };
 
@@ -160,79 +201,116 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
    * Game statistics and controls component
    */
   const GameControls = () => (
-    <ResponsivePanel
-      variant="overlay"
-      withGlow={false}
+    <div
+      style={{
+        background: 'rgba(0, 20, 40, 0.7)',
+        backdropFilter: 'blur(5px)',
+        borderRadius: '12px',
+        padding: '16px',
+        boxShadow: '0 0 15px rgba(0, 195, 255, 0.2)',
+        border: '1px solid rgba(0, 195, 255, 0.1)',
+      }}
     >
-      <ResponsiveText
-        variant="caption"
-        size="xs"
+      <p
         style={{
-          marginBottom: `${getResponsiveSpacing('base', layoutMode)}px`,
+          marginBottom: '16px',
           textAlign: 'center',
+          fontSize: '12px',
+          color: '#7cb3e8',
         }}
       >
-        <span style={{ color: FUTURISTIC_THEME.colors.text.secondary }}>QUANTUM INQUIRY</span>{' '}
-        <span style={{ color: FUTURISTIC_THEME.colors.secondary }}>{questionNumber}</span>{' '}
-        <span style={{ color: FUTURISTIC_THEME.colors.text.secondary }}>OF</span>{' '}
-        <span style={{ color: FUTURISTIC_THEME.colors.secondary }}>{totalQuestions}</span>
-      </ResponsiveText>
+        <span style={{ color: '#7cb3e8' }}>KNOWLEDGE WEAPONS DEPLOYED</span>{' '}
+        <span style={{ color: '#4aa8ff' }}>{questionNumber}</span>{' '}
+        <span style={{ color: '#7cb3e8' }}>OF</span>{' '}
+        <span style={{ color: '#4aa8ff' }}>{totalQuestions}</span>
+      </p>
 
-      <ResponsiveButton
+      <button
         onClick={() => onNavigate('/')}
-        variant="secondary"
-        size="base"
         style={{
           width: '100%',
+          padding: '12px',
+          background: 'linear-gradient(135deg, #193366 0%, #2b4f8a 100%)',
+          color: '#e8f4ff',
+          borderRadius: '8px',
+          fontSize: '14px',
+          fontWeight: 'bold',
+          cursor: 'pointer',
+          border: '1px solid rgba(0, 195, 255, 0.3)',
+          boxShadow: '0 0 10px rgba(0, 195, 255, 0.2)',
+          transition: 'all 0.2s ease',
+          fontFamily: '"Orbitron", sans-serif',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: '8px',
         }}
         data-testid="return-to-base-button"
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = '0 0 15px rgba(0, 195, 255, 0.4)';
+          e.currentTarget.style.transform = 'translateY(-2px)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = '0 0 10px rgba(0, 195, 255, 0.2)';
+          e.currentTarget.style.transform = 'translateY(0)';
+        }}
       >
         ← Return to Base
-      </ResponsiveButton>
-    </ResponsivePanel>
+      </button>
+    </div>
   );
 
   return (
     <div
       data-testid="desktop-sidebar"
       style={{
-        width: `${sidebarWidth}px`,
-        height: '100vh',
-        background: FUTURISTIC_THEME.gradients.background,
-        borderLeft: `1px solid ${FUTURISTIC_THEME.colors.border}`,
-        boxShadow: '-5px 0 15px rgba(0, 0, 0, 0.3)',
+        width: '100%',
+        height: '100%',
+        background: 'linear-gradient(135deg, #061224 0%, #0a1c34 100%)',
         display: 'flex',
         flexDirection: 'column',
-        padding: `${getResponsiveSpacing('lg', layoutMode)}px`,
+        padding: '24px',
         overflowY: 'auto',
         position: 'relative',
       }}
     >
       {/* Header Section */}
-      <ResponsiveFlex
-        direction={{ mobile: 'column', tablet: 'column', desktop: 'column', 'large-desktop': 'column' }}
-        align="center"
-        justify="center"
-        gap="lg"
-        style={{ textAlign: 'center' }}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+          marginBottom: '24px',
+        }}
       >
-        <ResponsiveText
-          variant="heading"
-          size="xl"
-          as="h1"
+        <h1
           style={{
-            margin: 0,
-            textShadow: FUTURISTIC_THEME.effects.glow.subtle,
+            margin: '0 0 20px 0',
+            fontSize: '24px',
+            fontWeight: '800',
+            background: 'linear-gradient(180deg, #ffffff 0%, #7cbdff 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            textShadow: '0 0 15px rgba(0, 195, 255, 0.7)',
+            fontFamily: '"Orbitron", sans-serif',
+            letterSpacing: '2px',
           }}
         >
           PLANETARY CHESS
-        </ResponsiveText>
+        </h1>
+        <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+          <p style={{ 
+            margin: '0', 
+            fontSize: '12px', 
+            color: '#7cb3e8',
+            fontStyle: 'italic'
+          }}>
+            Stewie - The Embodiment of Systemic Racism
+          </p>
+        </div>
         <StewieAvatar />
-      </ResponsiveFlex>
+      </div>
 
       {/* AI Taunt Section */}
       <TauntDisplay />
@@ -244,6 +322,15 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
 
       {/* Controls Section */}
       <GameControls />
+      
+      <style>
+        {`
+          @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+          }
+        `}
+      </style>
     </div>
   );
 };
